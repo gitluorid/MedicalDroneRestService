@@ -16,28 +16,6 @@ import java.util.List;
  */
 @Service
 public class PositionService {
-    // Helper method to check if a position is invalid
-    private String validatePosition(Position pos) {
-        if (pos == null) return "position is missing.";
-        if (pos.lng() == null || pos.lat() == null) return "lng or lat is missing.";
-        return null;
-    }
-
-    /**
-     * Checks if a DistanceRequest is invalid.
-     * A DistanceRequest is invalid if either position1 or position2 is null or invalid.
-     * @param distanceRequest the DistanceRequest to validate
-     * @return String: null if valid, or error message if invalid
-     */
-    public String validateDistance(DistanceRequest distanceRequest) {
-        if (distanceRequest == null) return "Distance Request is missing";
-        String errorMsg1 = validatePosition(distanceRequest.position1());
-        if (errorMsg1 != null) return "position1: " + errorMsg1;
-        String errorMsg2 = validatePosition(distanceRequest.position2());
-        if (errorMsg2 != null) return "position2: " + errorMsg2;
-        return null;
-    }
-
     /**
      * Calculates the Euclidean distance between two positions in degrees.
      * @param distanceRequest: the DistanceRequest containing position1 and position2
@@ -61,20 +39,12 @@ public class PositionService {
     }
 
     /**
-     * Checks if a NextPositionRequest is invalid.
-     * A request is invalid if:
-     * - The request itself or its start position is null
-     * - The angle is null, negative, >= 360, or not a multiple of 22.5 degrees
+     * Validates the angle of a NextPositionRequest.
      * @param positionRequest the NextPositionRequest to validate
      * @return String: null if valid, or error message if invalid
      */
-    public String validateNextPosition(NextPositionRequest positionRequest) {
-        if (positionRequest == null) return "Position Request is missing.";
-        String errorMsg = validatePosition(positionRequest.start());
-        if (errorMsg != null) return "Start: " + errorMsg;
-        if (positionRequest.angle() == null) return "Angle is missing.";
+    public String validateNextPositionAngle(NextPositionRequest positionRequest) {
         double angle = positionRequest.angle();
-        if (angle < 0 || angle >= 360) return "Angle out of range: " + angle;
         if (angle % 22.5 != 0) return "Angle not multiple of 22.5: " + angle;
         return null;
     }
@@ -94,33 +64,19 @@ public class PositionService {
         return new Position(endLng, endLat);
     }
 
-
     /**
-     * Checks whether a given RegionRequest is invalid.
-     * A RegionRequest is invalid if:
-     * - The request itself or its base position is null or invalid
-     * - The region or its name is null
-     * - The region has no vertices or vertices contain invalid positions
-     * - The polygon is not closed (first and last vertices differ)
-     * - The polygon has fewer than 4 vertices (needs at least 3 + closing vertex)
+     * Validates the region of a RegionRequest.
+     * A region is invalid if:
+     * - The region is not closed (first and last vertices differ)
      * @param regionRequest the RegionRequest to validate
      * @return String: null if valid, or error message if invalid
      */
     public String validateRegion(RegionRequest regionRequest) {
-        if (regionRequest == null) return "Region Request is missing.";
-        String errorMsg = validatePosition(regionRequest.position());
-        if (errorMsg != null) return "Region Request position: " + errorMsg;
-        if (regionRequest.region() == null) return "Region is missing.";
-        if (regionRequest.region().name() == null) return "Region name is missing.";
         List<Position> vertices = regionRequest.region().vertices();
-        if (vertices == null || vertices.isEmpty()) return "Region vertices missing.";
-        for (int i = 0; i < vertices.size(); i++) {
-            String posErrorMsg = validatePosition(vertices.get(i));
-            if (posErrorMsg != null) return "Vertex " + i + ": " + posErrorMsg;
-        }
-        if (vertices.size() < 4) return "Too few vertices.";
         Position first = vertices.getFirst(), last = vertices.getLast();
-        if (!first.lng().equals(last.lng()) || !first.lat().equals(last.lat())) {return "Polygon not closed.";}
+        if (!first.lng().equals(last.lng()) || !first.lat().equals(last.lat())) {
+            return "Polygon must be closed!";
+        }
         return null;
     }
 

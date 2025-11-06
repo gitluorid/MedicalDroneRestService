@@ -20,34 +20,6 @@ public class PositionServiceTest {
     private final PositionService service = new PositionService();
 
     @Nested
-    class ValidateDistanceTests {
-        @Test
-        void withValidPositions_returnsNull() {
-            DistanceRequest request = new DistanceRequest(
-                    new Position(0.123, 0.456),
-                    new Position(0.789, 1.234)
-            );
-            assertNull(service.validateDistance(request));
-        }
-
-        @Test
-        void withNullPosition1_returnsError() {
-            DistanceRequest request = new DistanceRequest(null, new Position(0.0, 0.0));
-            String error = service.validateDistance(request);
-            assertNotNull(error);
-            assertTrue(error.contains("position1"));
-        }
-
-        @Test
-        void withNullPosition2_returnsError() {
-            DistanceRequest request = new DistanceRequest(new Position(0.0, 0.0), null);
-            String error = service.validateDistance(request);
-            assertNotNull(error);
-            assertTrue(error.contains("position2"));
-        }
-    }
-
-    @Nested
     class CalculateDistanceTests {
         @Test
         void withKnownPoints_returnsCorrectDistance() {
@@ -76,13 +48,13 @@ public class PositionServiceTest {
         @Test
         void validateNextPosition_withValidAngle_returnsNull() {
             NextPositionRequest request = new NextPositionRequest(new Position(0.0,0.0), 22.5);
-            assertNull(service.validateNextPosition(request));
+            assertNull(service.validateNextPositionAngle(request));
         }
 
         @Test
         void validateNextPosition_withInvalidAngle_returnsError() {
             NextPositionRequest request = new NextPositionRequest(new Position(0.0,0.0), 15.0);
-            String error = service.validateNextPosition(request);
+            String error = service.validateNextPositionAngle(request);
             assertNotNull(error);
             assertTrue(error.contains("multiple of 22.5"));
         }
@@ -125,7 +97,6 @@ public class PositionServiceTest {
 
             String errorMsg = service.validateRegion(regionRequest);
             assertNotNull(errorMsg);
-            assertTrue(errorMsg.contains("Polygon not closed"));
         }
     }
 

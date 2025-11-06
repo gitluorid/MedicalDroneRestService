@@ -2,6 +2,7 @@ package uk.ac.ed.acp.cw2.unit_tests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -30,12 +31,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ServiceControllerMvcTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @InjectMocks
+    private ServiceController serviceController;
+
     @Autowired
     private ObjectMapper objectMapper;
+
     @MockitoBean
     private PositionService positionService;
 
-    // Valid requests
+    // Valid 200 OK requests
     @Test
     void uid_returnsStudentId() throws Exception {
         mockMvc.perform(get("/api/v1/uid"))
@@ -51,7 +57,6 @@ public class ServiceControllerMvcTest {
         );
 
         // Mock the service methods that the controller calls
-        when(positionService.validateDistance(any())).thenReturn(null); // valid
         when(positionService.calculateDistance(any())).thenReturn(1.0); // mock result
 
         mockMvc.perform(post("/api/v1/distanceTo") // perform the request
@@ -59,6 +64,7 @@ public class ServiceControllerMvcTest {
                         .content(objectMapper.writeValueAsString(distanceRequest)))
                 // assert the response
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(result -> {
                     double value = Double.parseDouble(result.getResponse().getContentAsString());
                     assertEquals(1.0, value, 1e-6);
@@ -72,7 +78,6 @@ public class ServiceControllerMvcTest {
                 new Position(0.0, 0.0)
         );
 
-        when(positionService.validateDistance(any())).thenReturn(null);
         when(positionService.isCloseTo(any(), any(Double.class))).thenReturn(true);
 
         mockMvc.perform(post("/api/v1/isCloseTo")
@@ -93,13 +98,14 @@ public class ServiceControllerMvcTest {
         );
         Position expectedNext = new Position(0.001, 0.0);
 
-        when(positionService.validateNextPosition(any())).thenReturn(null);
+        when(positionService.validateNextPositionAngle(any())).thenReturn(null);
         when(positionService.calculateNextPosition(any())).thenReturn(expectedNext);
 
         mockMvc.perform(post("/api/v1/nextPosition")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(nextPositionRequest)))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(result -> {
                     Position value = objectMapper.readValue(result.getResponse().getContentAsString(), Position.class);
                     assertEquals(expectedNext.lng(), value.lng(), 1e-6);
@@ -139,8 +145,6 @@ public class ServiceControllerMvcTest {
         DistanceRequest invalidRequest = new DistanceRequest(null, null);
 
         // Mock service to simulate validation failure
-        when(positionService.validateDistance(any())).thenReturn("Invalid positions");
-
         mockMvc.perform(post("/api/v1/distanceTo")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -150,7 +154,6 @@ public class ServiceControllerMvcTest {
     @Test
     void isCloseTo_invalidRequest_returnsBadRequest() throws Exception {
         DistanceRequest invalidRequest = new DistanceRequest(null, null);
-        when(positionService.validateDistance(any())).thenReturn("Invalid positions");
         mockMvc.perform(post("/api/v1/isCloseTo")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -160,7 +163,7 @@ public class ServiceControllerMvcTest {
     @Test
     void nextPosition_invalidRequest_returnsBadRequest() throws Exception {
         NextPositionRequest invalidRequest = new NextPositionRequest(null, 15.0);
-        when(positionService.validateNextPosition(any())).thenReturn("Invalid angle");
+        when(positionService.validateNextPositionAngle(any())).thenReturn("Invalid angle");
         mockMvc.perform(post("/api/v1/nextPosition")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))

@@ -1,5 +1,6 @@
 package uk.ac.ed.acp.cw2.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,9 +65,7 @@ public class ServiceController {
      * @return 200 OK with the distance if valid, or 400 Bad Request if input is invalid
      */
     @PostMapping("/distanceTo")
-    public ResponseEntity<Double> distanceTo(@RequestBody DistanceRequest distanceRequest) {
-        String errorMsg = positionService.validateDistance(distanceRequest);
-        if (isInvalidRequest("distanceTo", errorMsg)) return ResponseEntity.badRequest().build();
+    public ResponseEntity<Double> distanceTo(@RequestBody @Valid DistanceRequest distanceRequest) {
         return ResponseEntity.ok(positionService.calculateDistance(distanceRequest));
     }
 
@@ -76,9 +75,7 @@ public class ServiceController {
      * @return 200 OK with true/false if valid, or 400 Bad Request if input is invalid
      */
     @PostMapping("/isCloseTo")
-    public ResponseEntity<Boolean> isCloseTo(@RequestBody DistanceRequest distanceRequest) {
-        String errorMsg = positionService.validateDistance(distanceRequest);
-        if (isInvalidRequest("isCloseTo", errorMsg)) return ResponseEntity.badRequest().build();
+    public ResponseEntity<Boolean> isCloseTo(@RequestBody @Valid DistanceRequest distanceRequest) {
         return ResponseEntity.ok(positionService.isCloseTo(distanceRequest, 0.00015));
     }
 
@@ -88,8 +85,8 @@ public class ServiceController {
      * @return 200 OK with the next Position if valid, or 400 Bad Request if input is invalid
      */
     @PostMapping("/nextPosition")
-    public ResponseEntity<Position> nextPosition(@RequestBody NextPositionRequest positionRequest) {
-        String errorMsg = positionService.validateNextPosition(positionRequest);
+    public ResponseEntity<Position> nextPosition(@RequestBody @Valid NextPositionRequest positionRequest) {
+        String errorMsg = positionService.validateNextPositionAngle(positionRequest);
         if (isInvalidRequest("nextPosition", errorMsg)) return ResponseEntity.badRequest().build();
         return ResponseEntity.ok(positionService.calculateNextPosition(positionRequest));
     }
@@ -100,7 +97,7 @@ public class ServiceController {
      * @return 200 OK with true/false if valid, or 400 Bad Request if input is invalid
      */
     @PostMapping("/isInRegion")
-    public ResponseEntity<Boolean> isInRegion(@RequestBody RegionRequest regionRequest) {
+    public ResponseEntity<Boolean> isInRegion(@RequestBody @Valid RegionRequest regionRequest) {
         String errorMsg = positionService.validateRegion(regionRequest);
         if (isInvalidRequest("isInRegion", errorMsg)) return ResponseEntity.badRequest().build();
         return ResponseEntity.ok(positionService.isInRegion(regionRequest));
