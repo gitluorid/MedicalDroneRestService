@@ -4,16 +4,17 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uk.ac.ed.acp.cw2.dto.DistanceRequest;
 import uk.ac.ed.acp.cw2.dto.NextPositionRequest;
 import uk.ac.ed.acp.cw2.dto.Position;
 import uk.ac.ed.acp.cw2.dto.RegionRequest;
+import uk.ac.ed.acp.cw2.service.DroneService;
 import uk.ac.ed.acp.cw2.service.PositionService;
 
 import java.net.URL;
+import java.util.List;
 
 /**
  * Controller class that handles various HTTP endpoints for the application.
@@ -27,11 +28,14 @@ public class ServiceController {
 
     // Service that handles all position-related calculations and validations
     private final PositionService positionService;
+    // Service that handles all drone-related calculations and validations
+    private final DroneService droneService;
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceController.class);
 
-    @Value("${ilp.service.url}")
-    public URL serviceUrl;
+    //@Value("${ilp.service.url}")
+    //public URL serviceUrl;
+    private final URL serviceUrl; // Inject the bean here
 
     @GetMapping("/")
     public String index() {
@@ -102,4 +106,16 @@ public class ServiceController {
         if (isInvalidRequest("isInRegion", errorMsg)) return ResponseEntity.badRequest().build();
         return ResponseEntity.ok(positionService.isInRegion(regionRequest));
     }
+
+    /**
+     * GET endpoint to retrieve a list of drones-ids which support cooling (state is true) or not (false)
+     * @param state the state to filter by
+     * @return 200 OK with the list of drones if valid, or 400 Bad Request if input is invalid
+     */
+    @PostMapping("/dronesWithCooling/{state}")
+    public ResponseEntity<List<Long>> dronesWithCooling(@PathVariable Boolean state) {
+        return ResponseEntity.ok(droneService.getDronesWithCooling(state));
+    }
+
+
 }

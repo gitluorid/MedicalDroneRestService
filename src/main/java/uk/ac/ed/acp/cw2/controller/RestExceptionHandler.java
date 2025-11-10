@@ -46,7 +46,7 @@ public class RestExceptionHandler {
                     .append(fieldError.getDefaultMessage())
                     .append("\n");
         }
-        logger.warn("Validation error: {}", logMessage.toString());
+        logger.warn("Validation error: \n{}", logMessage.toString());
         return ResponseEntity.badRequest().build();
     }
 }
